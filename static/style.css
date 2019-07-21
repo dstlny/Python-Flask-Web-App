@@ -1,0 +1,90 @@
+.loading span{
+    animation-name:blink;
+    animation-duration:1.4s;
+    animation-iteration-count:infinite;
+    animation-fill-mode:both
+}
+.loading span:nth-child(2){
+    animation-delay:.2s
+}
+.loading span:nth-child(3){
+    animation-delay:.4s
+}
+#outer-accordion .ui-accordion-content{
+    padding:0
+}
+#outer-accordion{
+    padding-top:10px;
+    padding-bottom:20px;
+    max-width:800px;
+    margin:auto
+}
+#inner-accordion .ui-accordion-content{
+    padding:0
+}
+#inner-accordion{
+    max-width:100%;
+    margin:auto;
+    font-family:Oxygen,sans-serif;
+    font-size:9px
+}
+#inner-accordion div{
+    padding:0;
+    height:100%
+}
+#accordion{
+    max-width:100%;
+    margin:auto;
+    font-family:Oxygen,sans-serif;
+    font-size:9px
+}
+#accordion div{
+    padding:0;
+    height:100%
+}
+#inner-accordion-bakery{
+    max-width:100%;
+    margin:auto;
+    font-family:Oxygen,sans-serif;
+    font-size:9px;
+    overflow-y:scroll
+}
+#inner-accordion-bakery div{
+    padding:0
+}
+#basket-accordion{
+    padding-top:10px;
+    padding-bottom:20px;
+    max-width:700px;
+    margin:auto
+}
+table,td,th{
+    border:1px solid #ddd;
+    text-align:center
+}
+table{
+    border-collapse:collapse;
+    width:100%;
+    margin-top:0
+}
+td,th{
+    padding:5px
+}
+img{
+    margin:0;
+    padding:0
+}
+table img{
+    width:60%;
+    height:auto;
+    padding:0;
+    padding:0
+}
+.card {
+    display:inline-block; 
+    width: 200px;
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-bottom: 5px;
+    margin-right: 10px;
+}

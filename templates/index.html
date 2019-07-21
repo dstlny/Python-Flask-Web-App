@@ -1,0 +1,12 @@
+{% include 'header.html' %}
+<body>
+    <div class="container" style="margin-top:60px; padding-bottom:60px;max-width:600px">
+      {% if not session or session['user']['_logged_in'] != True: %} 
+        {% include 'loginform.html' %}
+      {% elif session and session['user']['_logged_in'] == True: %}
+        {% include 'loginform.html' %}
+      {% endif %}
+    </div>
+    {% include 'footer.html' %}
+</body>
+</html>

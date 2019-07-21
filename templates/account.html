@@ -1,0 +1,28 @@
+{% include 'header.html' %}
+<body>
+{% if logged_in == True: %}
+    <div class="container" style="margin-top:60px; padding-bottom:60px;max-width:600px">
+        <div class="jumbotron" style="padding-bottom:10px;padding-top:10px;">
+            <h3>Account Details</h3><br>
+            <div class='userDetails'>
+                <script src="../static/js/ajaxJS.js"></script>
+                <script>getUserDetails("{{ _mailuid }}",{{ admin|lower }});</script>
+            </div>
+        </div>
+        <div class="jumbotron" style="padding-bottom:10px;padding-top:10px;">
+            <h3>Change Password</h3><br>
+            <form class="form-signin" autocomplete="off">
+                <label for="inputCurrPass" class="sr-only">Current Password</label>
+                <input style="margin-bottom:10px;" type="text" name="inputCurrPass" id="inputCurrPass" class="form-control" placeholder="Input your current password!" required autofocus autocomplete="off">
+                <label for="inputNewPass" class="sr-only">New Password</label>
+                <input style="margin-bottom:10px;" type="text" name="inputNewPass" id="inputNewPass" class="form-control" placeholder="Input your new password!" required autofocus autocomplete="off">
+                <label for="inputNewPassConfirm" class="sr-only">Confirm New Password</label>
+                <input style="margin-bottom:10px;" type="text" name="inputNewPassConfirm" id="inputNewPassConfirm" class="form-control" placeholder="Confirm your new password!" required autofocus autocomplete="off">
+                <button id="change" class="btn btn-lg btn-primary btn-block" type="button">Reset Password</button>
+            </form>
+        </div>
+    </div>
+    {% include 'footer.html' %}
+{% endif %}
+</body>
+</html>

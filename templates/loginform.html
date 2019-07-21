@@ -1,0 +1,17 @@
+<div class="jumbotron"  style="padding-top:10px;padding-bottom:5px; margin-bottom:5px">
+    <p style="font-size:15px">Don't have an account?<br>No worries, click <a href="register">here</a> to signup for one!</p>
+</div>
+<div class="jumbotron" style="padding-bottom:10px;padding-top:10px;">
+    <h3>Account Login</h3><br>
+    <form class="form-signin" autocomplete="off">
+        <label for="inputEmail" class="sr-only">Email address</label>
+        <input style="margin-bottom:10px;" type="email" name="inputEmail" id="inputEmail" class="form-control" placeholder="Email address" required autofocus autocomplete="off">
+        <label for="inputPassword" class="sr-only">Password</label>
+        <input style="margin-bottom:10px;" type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password" required autocomplete="off">
+        {% if not session or session['user']['_logged_in'] != True: %} 
+            <button id="btnSignUp" class="btn btn-lg btn-primary btn-block" type="button">Login</button>
+        {% elif session and session['user']['_logged_in'] == True: %}
+            <button id="logout" class="btn btn-lg btn-block" type="button">Logout</button>
+        {% endif %}
+    </form>
+</div>

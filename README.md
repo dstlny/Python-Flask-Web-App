@@ -12,3 +12,7 @@ Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQu
 - Fetches data from MySQL database using Flasks inbuilt MySQL extension.
 - JSON is mainy used to communicare between backend and front-end.
   - Making use of AJAX to POST/GET requests from the server.
+  
+ # Please be aware this is still a work-in-progress. This is still being built and will get better with time.
+ 
+ Created: 21/07/19 by Luke Elam (dstlny)

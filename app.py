@@ -1,5 +1,5 @@
 from bcrypt import hashpw, gensalt, checkpw
-from flask import Flask, render_template, request, json, session, redirect, url_for, escape
+from flask import Flask, render_template, request, json, session, redirect, url_for, escape, jsonify
 from flaskext.mysql import MySQL
 
 
@@ -10,6 +10,9 @@ app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'c3518706'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+mysql = MySQL()
+mysql.init_app(app)
+conn = mysql.connect()
 
 @app.route("/product_cat", methods=['POST'])
 def getProducts():
@@ -32,6 +35,7 @@ def showSignUp():
 @app.route('/logout')
 def logout():
     session.clear()
+    print('Session cleaned up')
     return json.dumps({'message':'Logged out successfully!','redirect':'/'})
 
 @app.route('/account')
@@ -40,12 +44,12 @@ def account_page():
 
 @app.route('/resetPass', methods=['POST'])
 def reset_user_pass():
-    import userUtils
-    user = userUtils.user()
+    
     _curr = request.form['inputCurrPass'].encode('utf-8')
     _new = request.form['inputNewPass'].encode('utf-8')
     _newCon = request.form['inputNewPassConfirm'].encode('utf-8')
     _hashed_password = hashpw(_new, gensalt()).decode('utf-8')
+
     if session['user']['_admin'] == True:
         email = session['user']['_mailuid']
         query = f"SELECT Password FROM staff WHERE Email_Address = '{email}';"
@@ -64,9 +68,6 @@ def reset_user_pass():
                     data = {'error': 'Confirmation password does not match!'}
                     return json.dumps(data)
                 elif _new == _newCon:
-                    mysql = MySQL()
-                    mysql.init_app(app)
-                    conn = mysql.connect()
                     cursor = conn.cursor()
                     cursor.execute(query)
                     records = cursor.fetchone()
@@ -94,7 +95,7 @@ def reset_user_pass():
     except Exception as error:
         print(error)
 
-@app.route('/return_deet',methods=['POST'])
+@app.route('/return_user_details',methods=['POST'])
 def get_User_details():
     from webAppFunctions import webAppFunctions
     return webAppFunctions().getUserDetails(session['user']['_mailuid'],session['user']['_admin'])
@@ -150,10 +151,38 @@ def loginUser():
     else:
         return json.dumps({'error':'Required fields have not been populated!'})
 
+@app.route('/basket',methods=['POST'])
+def basket():
+    Prod_ID = None
+    Prod_QTY = None
+    Prod_Name = None
+    Prod_Price = None
+    client_data = request.get_json()
+    print(client_data)
+    Prod_ID = client_data['Product_ID']
+    Prod_QTY = client_data['Product_QTY']
+    Prod_Name = client_data['Product_Name']
+    Prod_Price = client_data['Product_Price']
+    
+    if not Prod_ID and not Prod_QTY and not Prod_Name and not Prod_Price:
+        return redirect(url_for('menu'))
+    else:
+        if not 'Order' in session:
+            session['Order'] = []
+
+        main_order_list = session['Order']
+        keys = ['Prod_ID', 'Prod_QTY', 'Prod_Name', 'Total']
+        values = [int(Prod_ID),int(Prod_QTY), Prod_Name,round(int(Prod_QTY)*float(Prod_Price),2)]
+        main_order_list.append(dict(zip(keys, values)))
+        session['Order'] = main_order_list
+        print(len(session['Order']))
+        print(json.dumps({'Order':session['Order']}))
+        return json.dumps({'Order':session['Order']}) 
+
 @app.route('/menu')
 def menu():
     url = '/menu'
     return render_template('menu.html', url=url)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

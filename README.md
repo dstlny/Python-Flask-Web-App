@@ -10,8 +10,13 @@ Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQu
   - On desktops, products are displayed as 'Cards'
 - Fetches data from MySQL database using Flasks inbuilt MySQL extension.
   - All passwords are encrypted using Bcrypt, making use of bcrypt's native hashpw() and checkpw() methods.
-- JSON is mainy used to communicare between backend and front-end.
+- JSON is mainy used to communicate between backend and front-end.
   - Making use of AJAX to POST/GET requests from the server.
+- Staff page is now implemented
+  - This is done entirely on the servers side, as we don't want to trust anybody with the order-data, thus no JSON is sent to or from.
+- User-basket has been implemented
+  - Includes Total with VAT, without VAT and per-product breakdown.
+- Menu and overall website aesthetic is responsive.
   
  # Please be aware this is still a work-in-progress. This is still being built and will get better with time.
  

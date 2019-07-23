@@ -16,6 +16,8 @@ Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQu
   - This is done entirely on the servers side, as we don't want to trust anybody with the order-data, thus no JSON is sent to or from.
 - User-basket has been implemented
   - Includes Total with VAT, without VAT and per-product breakdown.
+  - Table selection, is also included.
+  - Once the user has ordered, the confirmation button is disabled.
 - Menu and overall website aesthetic is responsive.
   
  # Please be aware this is still a work-in-progress. This is still being built and will get better with time.

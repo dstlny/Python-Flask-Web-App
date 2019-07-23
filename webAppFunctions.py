@@ -6,7 +6,6 @@ from flaskext.mysql import MySQL
 class webAppFunctions():
     mysql = MySQL()
     mysql.init_app(application)
-    product_dict = {}
 
     def returnNextID(self):
         self.conn = self.mysql.connect()
@@ -36,7 +35,7 @@ class webAppFunctions():
     def getUserDetails(self, email, admin):
         self.conn = self.mysql.connect()
         
-        if admin == True:
+        if session['user']['_admin'] == True:
             self.cursor = self.conn.cursor()
             query  = f"SELECT Email_Address FROM STAFF WHERE Email_Address = '{email}';"
             self.cursor.execute(query)
@@ -51,14 +50,3 @@ class webAppFunctions():
 
         self.conn.close()
             
-
-        
-
-
-            
-
-
-
-
-
-        

@@ -1,7 +1,7 @@
 from bcrypt import hashpw, gensalt, checkpw
 from flask import Flask, render_template, request, json, session, redirect, url_for, escape, jsonify
 from flaskext.mysql import MySQL
-
+from datetime import datetime
 
 app = Flask(__name__)
 # MySQL configurations
@@ -10,9 +10,6 @@ app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'c3518706'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-mysql = MySQL()
-mysql.init_app(app)
-conn = mysql.connect()
 
 @app.route("/product_cat", methods=['POST'])
 def getProducts():
@@ -44,7 +41,9 @@ def account_page():
 
 @app.route('/resetPass', methods=['POST'])
 def reset_user_pass():
-    
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
     _curr = request.form['inputCurrPass'].encode('utf-8')
     _new = request.form['inputNewPass'].encode('utf-8')
     _newCon = request.form['inputNewPassConfirm'].encode('utf-8')
@@ -144,6 +143,7 @@ def loginUser():
         
         if user.checkUser(_email, _password) == True or user.checkAdmin(_email, _password) == True:
             session['user'] = json.loads(user.getUserObject())
+            print(session['user'])
             return json.dumps({'message':'Successfully logged you in!', 'redirect':'/menu'}) 
         else:
             return json.dumps({'error':'User not recognised or password incorrect!'}) 
@@ -153,16 +153,15 @@ def loginUser():
 
 @app.route('/basket',methods=['POST'])
 def basket():
-    Prod_ID = None
-    Prod_QTY = None
-    Prod_Name = None
-    Prod_Price = None
+    Prod_ID = 0
+    Prod_QTY = 0
+    Prod_Name = ""
+    Prod_Price = 0.00
     client_data = request.get_json()
-    print(client_data)
     Prod_ID = client_data['Product_ID']
-    Prod_QTY = client_data['Product_QTY']
     Prod_Name = client_data['Product_Name']
     Prod_Price = client_data['Product_Price']
+    Prod_QTY = client_data['Product_QTY']
     
     if not Prod_ID and not Prod_QTY and not Prod_Name and not Prod_Price:
         return redirect(url_for('menu'))
@@ -170,14 +169,107 @@ def basket():
         if not 'Order' in session:
             session['Order'] = []
 
-        main_order_list = session['Order']
-        keys = ['Prod_ID', 'Prod_QTY', 'Prod_Name', 'Total']
-        values = [int(Prod_ID),int(Prod_QTY), Prod_Name,round(int(Prod_QTY)*float(Prod_Price),2)]
-        main_order_list.append(dict(zip(keys, values)))
-        session['Order'] = main_order_list
-        print(len(session['Order']))
-        print(json.dumps({'Order':session['Order']}))
-        return json.dumps({'Order':session['Order']}) 
+        if len(session['Order']) < 4:
+            main_order_list = session['Order']
+            keys = ['Prod_ID', 'Prod_QTY', 'Prod_Name', 'Total']
+            values = [int(Prod_ID),int(Prod_QTY), Prod_Name,round(int(Prod_QTY)*float(Prod_Price),2)]
+            main_order_list.append(dict(zip(keys, values)))
+            session['Order'] = main_order_list
+            return redirect(url_for('menu'))
+        else:
+            return json.dumps({'error':'You cannot have more than 4 items in your basket at a given time!'})
+
+@app.route('/orders')
+def cus_orders():
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT Order_ID, Order_Total, Table_No FROM ORDERS WHERE Order_Complete='N'")
+    style_string = ""
+    
+    for row in cursor.fetchall():
+        style_string += f"<div class='card' style='border-radius: 15px;'><center><div class='card-body'><h5 class='card-title'>ORDER {row[0]}<br><hr>Table {row[2]}<br><hr>Total (<b>&pound;{round(row[1],2)}</b>)<hr></h5>"
+        style_string+=f"<span class='price-new'>{get_items_from_id(row[0])}</span></div></center></div>"
+
+    cursor.close()
+    conn.close()
+    
+    return render_template('orders.html', content=style_string)
+
+def get_items_from_id(id):
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    style_string = ""
+    sql = f"SELECT fk1_Product_ID, Quantity FROM ORDER_ITEMS WHERE fk2_Order_ID = {id}"
+    print(sql)
+    cursor.execute(f"SELECT fk1_Product_ID, Quantity FROM ORDER_ITEMS WHERE fk2_Order_ID = {id}")
+    
+    for row in cursor.fetchall():
+        style_string += f"<p style='line-height: 0.5;'>{row[1]} x {get_product_name(row[0])}</p>"
+        return style_string
+    cursor.close()
+    conn.close()
+
+def get_product_name(id):
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    style_string = ""
+    sql = f"SELECT Product_Name FROM PRODUCT WHERE Product_ID = {id}"
+    print(sql)
+    cursor.execute(f"SELECT Product_Name FROM PRODUCT WHERE Product_ID = {id}")
+    row = cursor.fetchone()
+    return row[0]
+    cursor.close()
+    conn.close()
+
+@app.route('/finalizeOrder',methods=['POST'])
+def final_Order():
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
+
+    time_stamp = datetime.now()
+    client_data = request.get_json()
+    Table = client_data['Table']
+    ORDER_TOTAL = 0.00
+
+    for i in session['Order']:
+        ORDER_TOTAL = ORDER_TOTAL + i['Total']
+    
+    from webAppFunctions import webAppFunctions
+    session['order_id'] = webAppFunctions().returnNextID()
+
+    sql = f"INSERT INTO ORDERS (Order_ID, Order_Total, Table_No, Order_Timestamp, Order_Complete, fk1_User_ID, fk2_Staff_ID) VALUES (NULL,{round(ORDER_TOTAL,2)},{Table},'{time_stamp}', 'N', {session['user']['_userID']}, NULL)"
+    cursor.execute(sql)
+    conn.commit()
+
+    for i in session['Order']:
+        sql = f"INSERT INTO ORDER_ITEMS (Order_Items_ID, Quantity, fk1_Product_ID, fk2_Order_ID) VALUES (NULL,{i['Prod_QTY']},{i['Prod_ID']},{session['order_id']})"
+        cursor.execute(sql)
+        conn.commit()
+    session['Ordered'] = True
+    return json.dumps({'message':'Successfully ordered!', 'ID':session['order_id']})
+
+@app.route('/remove_item',methods=['POST'])
+def remove_item():
+    Index_To_remove = None
+    client_data = request.get_json()
+    Index_To_remove = client_data.get('Index', None)
+    
+    if Index_To_remove is not None:
+        if not 'Order' in session:
+            session['Order'] = []
+
+        del session['Order'][int(Index_To_remove)]
+        session.modified = True
+        print(f'removed index {Index_To_remove}')
+        return redirect(url_for('menu'))
 
 @app.route('/menu')
 def menu():
@@ -185,4 +277,4 @@ def menu():
     return render_template('menu.html', url=url)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()

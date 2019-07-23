@@ -1,6 +1,6 @@
 {% include 'header.html' %}
 <body>
-    <div class="container" style="margin-top:60px; padding-bottom:60px; max-wdith:1300px;">
+    <div class="container" style="margin-top:60px; padding-bottom:60px; max-wdith:1300px; margin-bottom: 60px;">
         <!--JQuery accordion-->
         <div id="outer-accordion">
             <h3>Coffee Selection</h3>
@@ -44,6 +44,50 @@
                 </div>
             </div>
         </div>
+        {% if 'Order' in session and session['Order']|length > 0: %}
+            <div id="basket-accordion" style="float:right;margin-left:0px">
+                <h3>Current Basket</h3>
+                <div class="basket">
+                    <center>
+                        {% if session['Ordered'] == True: %}
+                            <h3>Order ID: {{session['order_id']}}</h3><br>
+                        {% endif %}
+                        
+                        <form name="basket-tbl" id="basket-tbl" action="/finalizeOrder" onsubmit="event.preventDefault(); return finaliseOrder();">
+                            <label for="tblNo">Table Number:</label>
+                            <select name="tblNo" id="tblNo">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                            </select>
+                        </form>
+                        {% set grand_total = namespace(a=0.00) %}
+                        {% set index = namespace(b=0) %}
+                        {% for i in session['Order']: %}
+                            <p style="display:none">{{grand_total.a}}</p>
+                            {% set grand_total.a = grand_total.a + i['Total'] %}
+                            <form  action="/remove_item" id="rem-{{index.b}}" onsubmit="event.preventDefault(); remove_from_basket({{index.b}});">
+                            <p style="font-size: 1.5em; text-align:right; text-justify:inter-word" class="basket-products"><button style="color: black; display: inline-block; background-color: Transparent; background-repeat:no-repeat; border: none;outline:none; margin-right: 20px; margin-left:0px;" form="rem-{{index.b}}" type="submit" name="remove" id="remove">X</button><b>{{i['Prod_QTY']}}</b> x <b>{{i['Prod_Name']}}</b> | (<b>&pound;{{"%.2f"|format(i['Total'])}}</b>)</p>
+                            </form>  
+                            {% set index.b = index.b + 1 %}
+                        {% endfor %}
+                        <hr>
+                        <p style="font-size: 2em; text-align:right;" class="total">Grand Total (minus) VAT: (<b>&pound;{{"%.2f"|format(grand_total.a / 1.2)}}</b>)</p>
+                        <p style="font-size: 2em; text-align:right;" class="total-VAT">Grand Total (plus) VAT: (<b>&pound;{{"%.2f"|format(grand_total.a)}}</b>)</p>
+                        {% if 'Ordered' not in session: %}
+                            <button id="basket-confim" form="basket-tbl" class="btn btn-lg btn-primary btn-block" value="Submit" type="submit">Confirm Order</button>
+                        {% elif session['Ordered'] == True: %}
+                            <button class="btn btn-lg btn-primary btn-block" disabled>ORDER PLACED</button>
+                        {% endif %}
+                    </center>
+                </div>
+            </div>
+        {% endif %}
     </div>
     {% include 'footer.html' %}
 </body>

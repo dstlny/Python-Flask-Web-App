@@ -48,9 +48,10 @@ function getUserDetails(){
 function appendToUserPage(json_response){
    json_response =  JSON.parse(json_response)
    var count = Object.keys(json_response).length;
+   console.log(count)
 
-   if(count < 1) /* then it's the admin */ {
-       $(".userDetails").append('<label for="staff_email" class="sr-only">Email address</label><input style="margin-bottom:10px;" type="email" name="inputEmail" class="form-control" value="'+json_response['account_email']+'" disabled>');
+   if(count == 1) /* then it's the admin */ {
+      $(".userDetails").append('<label for="staff_email" class="sr-only">Email address</label><input style="margin-bottom:10px;" type="email" name="inputEmail" class="form-control" value="'+json_response['account_email']+'" disabled>');
    } else {
       
       $(".userDetails").append('<label for="user_full_name" class="sr-only">Full Name</label><input style="margin-bottom:10px;" type="text" name="user_full_name" class="form-control" value="'+json_response['user_forename']+ ' ' +json_response['user_surname']+'" disabled><label for="email" class="sr-only">Second Name</label><input style="margin-bottom:10px;" type="email" name="email" class="form-control" value="'+json_response['account_email']+'" disabled>');
@@ -70,6 +71,8 @@ function add_to_basket(form_name){
       "Product_Price" : Product_Price,
       "Product_QTY" : Product_QTY
    }
+
+   console.log(JSON.stringify(data))
    
    var ajaxReq = $.ajax({
       url: "/basket",
@@ -81,10 +84,67 @@ function add_to_basket(form_name){
    });
 
    ajaxReq.done(function(msg){
-      console.log(msg)
+
+      if(typeof msg.error != undefined && msg.error){
+         alert(msg.error);
+      }
+
+      location.reload(true);
    });
 
    ajaxReq.fail(function(jqXHR, status){
-      console.log(jqXHR, status)
+      location.reload(true);
    });
- }
+}
+
+function remove_from_basket(index_of_item){
+
+   var data = {
+      "Index" : parseInt(index_of_item)
+   }
+   
+   var ajaxReq = $.ajax({
+      url: "/remove_item",
+      data: JSON.stringify(data),
+      type: 'POST',
+      async: true,
+      contentType: "application/json; charset=utf-8",
+      dataType: "json"
+   });
+
+   ajaxReq.done(function(msg){
+      location.reload(true);
+   });
+
+   ajaxReq.fail(function(jqXHR, status){
+      location.reload(true);
+   });
+}
+
+function finaliseOrder(){
+   table_no =  document.getElementById("basket-tbl").elements.namedItem("tblNo").value;
+
+   var data = {
+      "Table" : parseInt(table_no)
+   }
+   
+   var ajaxReq = $.ajax({
+      url: "/finalizeOrder",
+      data: JSON.stringify(data),
+      type: 'POST',
+      async: true,
+      contentType: "application/json; charset=utf-8",
+      dataType: "json"
+   });
+
+   ajaxReq.done(function(msg){
+      console.log(msg.message)
+      $(".basket").append('<center><hr><br><p style="color:green; font-size:15px;">'+msg.message+'<br>Your order ID is: <b>'+msg.ID+'</b></p></<center>')
+      location.reload(true);
+   });
+
+   ajaxReq.fail(function(jqXHR, status){
+      console.log(msg.message);
+      //location.reload(true);
+   });
+}

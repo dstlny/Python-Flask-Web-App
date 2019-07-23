@@ -9,5 +9,10 @@
         <li class="nav-item">
             <a href="/account" class="nav-link" style="text-align: center; color:#fff;">ACCOUNT DETAILS</a>
         </li>
+        {% if session and session['user']['_admin'] == True: %}
+            <li class="nav-item">
+                <a href="/orders" class="nav-link" style="text-align: center; color:#fff;">CUSTOMER ORDERS</a>
+            </li>
+        {% endif %}
     {% endif %}
 </nav>

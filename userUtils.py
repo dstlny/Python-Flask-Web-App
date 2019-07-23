@@ -132,7 +132,7 @@ class user():
                     self.setUser(row[0])
                     self.setEmail(row[0])
                     self.setID(row[1])
-                    self.setAdmin(False)
+                    self.setAdmin(True)
                     return True      
         else:
             return json.dumps({'error':'SQL Error occured!'})  

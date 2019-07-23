@@ -53,10 +53,12 @@
     padding:0
 }
 #basket-accordion{
-    padding-top:10px;
-    padding-bottom:20px;
-    max-width:700px;
-    margin:auto
+    margin-top: 5px;
+    margin-left: 10px;
+    margin-bottom: 5px;
+    margin-right: 10px;
+    margin:auto;
+    max-width: 800px;
 }
 table,td,th{
     border:1px solid #ddd;

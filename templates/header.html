@@ -93,36 +93,60 @@
                         }
                     });
                 });
-            });
-            function swapStyle(media) {
-                if (media.matches) { // If media query matches
-                    $('#outer-accordion').show();
-                    $('.card').hide();
-                } else {
-                    $('#outer-accordion').hide();
-                    $('.card').show();
+                function swapStyle(media) {
+                    if (media.matches) { // If media query matches
+                        $('#outer-accordion').show();
+                        $('#basket-accordion').css({'float':'none', 'max-width':'none'});
+                        
+                        if($(location).attr('pathname') != '/orders'){
+                            $('.card').hide();
+                        }
+                        
+                        $('.basket-products').css('font-size','1.1em');
+                        $('.total').css('font-size','1.2em');
+                    } else {
+                        $('#outer-accordion').hide();
+                        $('.card').show();
+                        $('.basket-products').css('font-size','1.5em');
+                        $('.total').css('font-size','2em');
+                        $('#basket-accordion').css({'float':'right', 'max-width':'none'});
+                    }
                 }
-            }
-            var media = window.matchMedia("(max-width: 800px)")
-            swapStyle(media) // Call listener function at run time
-            media.addListener(swapStyle) // Attach listener function on state change
+
+                function swapSmaller(media) {
+                    if (media.matches) { // If media query matches
+                        $('.basket-products').css('font-size','0.8em');
+                        $('.total').css('font-size','0.9em');
+                        $('#basket-accordion').css('float','none');
+                    } else {
+                        $('.basket-products').css('font-size','1.1em');
+                        $('.total').css('font-size','2em');
+                    }
+                }
+                var media = window.matchMedia("(max-width: 990px)")
+                var media2 = window.matchMedia("(max-width: 500px)")
+                swapStyle(media) // Call listener function at run time
+                swapSmaller(media2) // Call listener function at run time
+                media.addListener(swapStyle) // Attach listener function on state change
+                media2.addListener(swapSmaller) // Attach listener function on state change
+
+                $(document).ready(()=>{ 
+                     $("#qty option").attr('selected', 'selected'); 
+                });   
+            });
         });
     </script>
     <nav class="navbar fixed-top navbar-dark nav-fill" style="background-color: #333!important; color:#fff">
       <a class="navbar-brand">COFFEE SHACK</a>
       {% if url == '/menu': %}
         <a class="nav-link" style="text-align: center; color:#fff;">MENU</a>
-      {% endif %}
-      {% if url == '/main' or url == '/': %}
+      {% elif url == '/main' or url == '/': %}
         <a class="nav-link" style="text-align: center; color:#fff;">HOME</a>
-      {% endif %}
-      {% if url == '/account': %}
+      {% elif url == '/account': %}
         <a class="nav-link" style="text-align: center; color:#fff;">ACCOUNT</a>
-      {% endif %}
-      {% if url == '/signUp': %}
+      {% elif url == '/signUp': %}
         <a  class="nav-link" style="text-align: center; color:#fff;">SIGN UP</a>
-      {% endif %}
-      {% if url == '/login': %}
+      {% elif url == '/login': %}
         <a class="nav-link" style="text-align: center; color:#fff;">LOG IN</a>
       {% endif %}
     </nav>

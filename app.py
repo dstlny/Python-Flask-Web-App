@@ -10,6 +10,9 @@ app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'c3518706'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+mysql = MySQL()
+mysql.init_app(app)
+conn = mysql.connect()
 
 @app.route("/product_cat", methods=['POST'])
 def getProducts():
@@ -277,4 +280,4 @@ def menu():
     return render_template('menu.html', url=url)
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

@@ -72,8 +72,6 @@ function add_to_basket(form_name){
       "Product_QTY" : Product_QTY
    }
 
-   console.log(JSON.stringify(data))
-   
    var ajaxReq = $.ajax({
       url: "/basket",
       data: JSON.stringify(data),

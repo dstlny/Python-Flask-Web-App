@@ -102,6 +102,37 @@ def get_User_details():
     from webAppFunctions import webAppFunctions
     return webAppFunctions().getUserDetails(session['user']['_mailuid'],session['user']['_admin'])
 
+@app.route('/clearOrder',methods=['POST'])
+def clearOrder():
+    del session['Order']
+    del session['Ordered']
+    del session['OrderComplete']
+    session.modified = True
+    
+    print('Session cleaned up')
+    return json.dumps({'redirect':'/'})
+
+@app.route('/checkStatus',methods=['POST'])
+def getStat():
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    client_data = request.get_json()
+    print(client_data)
+    Order_ID = client_data['ID']
+    query = f"SELECT Order_Complete FROM ORDERS WHERE Order_ID={Order_ID}"
+    cursor.execute(query)
+    session['OrderComplete'] = True
+
+    result = cursor.fetchone()
+
+    if result[0] == 'N':
+        return
+    else:
+        data = {'message':'Order completed! Collect from till!'}
+        return json.dumps(data)
+
 @app.route('/signUp',methods=['POST'])
 def signUp():
     mysql = MySQL()
@@ -190,15 +221,24 @@ def cus_orders():
     cursor = conn.cursor()
     cursor.execute("SELECT Order_ID, Order_Total, Table_No FROM ORDERS WHERE Order_Complete='N'")
     style_string = ""
-    
-    for row in cursor.fetchall():
-        style_string += f"<div class='card' style='border-radius: 15px;'><center><div class='card-body'><h5 class='card-title'>ORDER {row[0]}<br><hr>Table {row[2]}<br><hr>Total (<b>&pound;{round(row[1],2)}</b>)<hr></h5>"
-        style_string+=f"<span class='price-new'>{get_items_from_id(row[0])}</span></div></center></div>"
 
-    cursor.close()
-    conn.close()
+    records = cursor.fetchall()
+
+    if records:
     
-    return render_template('orders.html', content=style_string)
+        for row in records:
+            style_string += f"<div class='card' style='border-radius: 15px;'><form  action='/compOrder' id='rem-{row[0]}' onsubmit='event.preventDefault(); completeOrder({row[0]});'><center><div class='card-body'><h5 class='card-title'>ORDER {row[0]}<br><hr>Table {row[2]}<br><hr>Total (<b>&pound;{round(row[1],2)}</b>)<hr></h5>"
+            style_string += f"<span class='price-new'>{get_items_from_id(row[0])}<br><button id='comp_order' form='rem-{row[0]}' class='btn btn-lg btn-primary btn-block' value='Submit' type='submit'>Complete Order</button></span></div></center></div>"
+
+        cursor.close()
+        conn.close()
+
+        return render_template('orders.html', content=style_string)
+
+    else:
+        style_string = '<center><p style="font-size:20px;">Currently no orders to process...<p></center><meta http-equiv="refresh" content="30">'
+    
+        return render_template('orders.html', content=style_string)
 
 def get_items_from_id(id):
     mysql = MySQL()
@@ -223,12 +263,26 @@ def get_product_name(id):
     cursor = conn.cursor()
     style_string = ""
     sql = f"SELECT Product_Name FROM PRODUCT WHERE Product_ID = {id}"
-    print(sql)
     cursor.execute(f"SELECT Product_Name FROM PRODUCT WHERE Product_ID = {id}")
     row = cursor.fetchone()
     return row[0]
     cursor.close()
     conn.close()
+
+@app.route('/compOrder',methods=['POST'])
+def complete_order_for_id():
+    client_data = request.get_json()
+    order_id = client_data['ID']
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    sql = f"UPDATE ORDERS SET Order_Complete = 'Y' WHERE Order_ID = {order_id}"
+    cursor.execute(sql)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect(url_for('cus_orders'))
 
 @app.route('/finalizeOrder',methods=['POST'])
 def final_Order():
@@ -280,4 +334,4 @@ def menu():
     return render_template('menu.html', url=url)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)

@@ -52,7 +52,6 @@
                         {% if session['Ordered'] == True: %}
                             <h3>Order ID: {{session['order_id']}}</h3><br>
                         {% endif %}
-                        
                         <form name="basket-tbl" id="basket-tbl" action="/finalizeOrder" onsubmit="event.preventDefault(); return finaliseOrder();">
                             <label for="tblNo">Table Number:</label>
                             <select name="tblNo" id="tblNo">
@@ -82,7 +81,14 @@
                         {% if 'Ordered' not in session: %}
                             <button id="basket-confim" form="basket-tbl" class="btn btn-lg btn-primary btn-block" value="Submit" type="submit">Confirm Order</button>
                         {% elif session['Ordered'] == True: %}
+                            <input type="hidden" name="Order_ID" ID="Order_ID" value='{{session['order_id']}}'>
                             <button class="btn btn-lg btn-primary btn-block" disabled>ORDER PLACED</button>
+                            <script> 
+                                setInterval(()=> {
+                                    var order_id = $("#Order_ID").val()
+                                    check_Stat(order_id);
+                                }, 30000);
+                            </script>
                         {% endif %}
                     </center>
                 </div>

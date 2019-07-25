@@ -18,9 +18,9 @@ Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQu
   - Includes Total with VAT, without VAT and per-product breakdown.
   - Table selection, is also included.
   - Once the user has ordered, the confirmation button is disabled.
+    - Users can remove specific products.
 - Menu and overall website aesthetic is responsive.
   
  # Please be aware this is still a work-in-progress. This is still being built and will get better with time.
  
- Created: 21/07/19 by Luke Elam (dstlny)
- Updated: 23/07/19 by Luke Elam (dstlny)
+ Created: 21/07/19 | Updated: 23/07/19 by Luke Elam (dstlny)

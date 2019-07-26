@@ -20,6 +20,12 @@ Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQu
   - Once the user has ordered, the confirmation button is disabled.
     - Users can remove specific products.
 - Menu and overall website aesthetic is responsive.
+
+## Installation
+
+- git clone https://github.com/dstlny/Python-Flask-Web-App.git
+- cd Python-Flask-Web-App
+- pip install -r requirements.txt
   
  # Please be aware this is still a work-in-progress. This is still being built and will get better with time.
  

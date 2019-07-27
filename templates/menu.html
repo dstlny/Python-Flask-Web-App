@@ -1,100 +1,103 @@
-{% include 'header.html' %}
-<body>
-    <div class="container" style="margin-top:60px; padding-bottom:60px; max-wdith:1300px; margin-bottom: 60px;">
-        <!--JQuery accordion-->
-        <div id="outer-accordion">
-            <h3>Coffee Selection</h3>
-            <div>
-                <!--JQuery accordion-->
-                <div id="inner-accordion">
-                    <h3>Latte</h3>
-                        <div class='Coffee_Latte'>
-                            <script type="text/javascript">getProduct('Coffee_Latte');</script>
-                        </div>
-                    <h3>Americano</h3>
-                        <div class='Coffee_Americano'>
-                            <script type="text/javascript">getProduct('Coffee_Americano');</script>
-                        </div>
-                    <h3>Espresso</h3>
-                        <div class='Coffee_Espresso'>
-                            <script type="text/javascript">getProduct('Coffee_Espresso');</script>
-                        </div>
-                    <h3>Macchiato</h3>
-                        <div class='Coffee_Macchiato'>
-                            <script type="text/javascript">getProduct('Coffee_Macchiato');</script>
-                        </div>
-                    <h3>Cappuccino</h3>
-                        <div class='Coffee_Cappuccino'>
-                            <script type="text/javascript">getProduct('Coffee_Cappuccino');</script>
-                        </div>
-                    <h3>Mocha</h3>
-                        <div class='Coffee_Mocha'>
-                            <script type="text/javascript">getProduct('Coffee_Mocha');</script>
-                        </div>
+{% if logged_in == True: %}
+    {% include 'header.html' %}
+    <body>
+        <div class="container" style="margin-top:60px; padding-bottom:60px; max-wdith:1300px; margin-bottom: 60px;">
+            <!--JQuery accordion-->
+            <div id="outer-accordion">
+                <h3>Coffee Selection</h3>
+                <div>
+                    <!--JQuery accordion-->
+                    <div id="inner-accordion">
+                        <h3>Latte</h3>
+                            <div class='Coffee_Latte'>
+                                <script type="text/javascript">getProduct('Coffee_Latte');</script>
+                            </div>
+                        <h3>Americano</h3>
+                            <div class='Coffee_Americano'>
+                                <script type="text/javascript">getProduct('Coffee_Americano');</script>
+                            </div>
+                        <h3>Espresso</h3>
+                            <div class='Coffee_Espresso'>
+                                <script type="text/javascript">getProduct('Coffee_Espresso');</script>
+                            </div>
+                        <h3>Macchiato</h3>
+                            <div class='Coffee_Macchiato'>
+                                <script type="text/javascript">getProduct('Coffee_Macchiato');</script>
+                            </div>
+                        <h3>Cappuccino</h3>
+                            <div class='Coffee_Cappuccino'>
+                                <script type="text/javascript">getProduct('Coffee_Cappuccino');</script>
+                            </div>
+                        <h3>Mocha</h3>
+                            <div class='Coffee_Mocha'>
+                                <script type="text/javascript">getProduct('Coffee_Mocha');</script>
+                            </div>
+                    </div>
                 </div>
-            </div>
-            <h3>Bakery items</h3>
-            <div>
-                <!--JQuery accordion-->
-                <div id="inner-accordion-bakery">
-                    <h3>On the side..</h3>
-                    <div class='Bakery'>
-                        <script type="text/javascript">getProduct('Bakery');</script>
+                <h3>Bakery items</h3>
+                <div>
+                    <!--JQuery accordion-->
+                    <div id="inner-accordion-bakery">
+                        <h3>On the side..</h3>
+                        <div class='Bakery'>
+                            <script type="text/javascript">getProduct('Bakery');</script>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-        {% if 'Order' in session and session['Order']|length > 0: %}
-            <div id="basket-accordion" style="float:right;margin-left:0px">
-                <h3>Current Basket</h3>
-                <div class="basket">
-                    <center>
-                        {% if session['Ordered'] == True: %}
-                            <h3>Order ID: {{session['order_id']}}</h3><br>
-                        {% endif %}
-                        <form name="basket-tbl" id="basket-tbl" action="/finalizeOrder" onsubmit="event.preventDefault(); return finaliseOrder();">
-                            <label for="tblNo">Table Number:</label>
-                            <select name="tblNo" id="tblNo">
-                                <option value="1">1</option>
-                                <option value="2">2</option>
-                                <option value="3">3</option>
-                                <option value="4">4</option>
-                                <option value="5">5</option>
-                                <option value="6">6</option>
-                                <option value="7">7</option>
-                                <option value="8">8</option>
-                            </select>
-                        </form>
-                        {% set grand_total = namespace(a=0.00) %}
-                        {% set index = namespace(b=0) %}
-                        {% for i in session['Order']: %}
-                            <p style="display:none">{{grand_total.a}}</p>
-                            {% set grand_total.a = grand_total.a + i['Total'] %}
-                            <form  action="/remove_item" id="rem-{{index.b}}" onsubmit="event.preventDefault(); remove_from_basket({{index.b}});">
-                            <p style="font-size: 1.5em; text-align:right; text-justify:inter-word" class="basket-products"><button style="color: black; display: inline-block; background-color: Transparent; background-repeat:no-repeat; border: none;outline:none; margin-right: 20px; margin-left:0px;" form="rem-{{index.b}}" type="submit" name="remove" id="remove">X</button><b>{{i['Prod_QTY']}}</b> x <b>{{i['Prod_Name']}}</b> | (<b>&pound;{{"%.2f"|format(i['Total'])}}</b>)</p>
-                            </form>  
-                            {% set index.b = index.b + 1 %}
-                        {% endfor %}
-                        <hr>
-                        <p style="font-size: 2em; text-align:right;" class="total">Grand Total (minus) VAT: (<b>&pound;{{"%.2f"|format(grand_total.a / 1.2)}}</b>)</p>
-                        <p style="font-size: 2em; text-align:right;" class="total-VAT">Grand Total (plus) VAT: (<b>&pound;{{"%.2f"|format(grand_total.a)}}</b>)</p>
-                        {% if 'Ordered' not in session: %}
-                            <button id="basket-confim" form="basket-tbl" class="btn btn-lg btn-primary btn-block" value="Submit" type="submit">Confirm Order</button>
-                        {% elif session['Ordered'] == True: %}
-                            <input type="hidden" name="Order_ID" ID="Order_ID" value='{{session['order_id']}}'>
-                            <button class="btn btn-lg btn-primary btn-block" disabled>ORDER PLACED</button>
-                            <script> 
-                                setInterval(()=> {
-                                    var order_id = $("#Order_ID").val()
-                                    check_Stat(order_id);
-                                }, 30000);
-                            </script>
-                        {% endif %}
-                    </center>
+            {% if 'Order' in session and session['Order']|length > 0: %}
+                <div id="basket-accordion" style="float:right;margin-left:0px">
+                    <h3>Current Basket</h3>
+                    <div class="basket">
+                        <center>
+                            {% if session['Ordered'] == True: %}
+                                <h3>Order ID: {{session['order_id']}}</h3><br>
+                            {% endif %}
+                            <form name="basket-tbl" id="basket-tbl" action="/finalizeOrder" onsubmit="event.preventDefault(); return finaliseOrder();">
+                                <label for="tblNo">Table Number:</label>
+                                <select name="tblNo" id="tblNo">
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                </select>
+                            </form>
+                            {% set grand_total = namespace(a=0.00) %}
+                            {% set index = namespace(b=0) %}
+                            {% for i in session['Order']: %}
+                                <p style="display:none">{{grand_total.a}}</p>
+                                {% set grand_total.a = grand_total.a + i['Total'] %}
+                                <form  action="/remove_item" id="rem-{{index.b}}" onsubmit="event.preventDefault(); remove_from_basket({{index.b}});">
+                                <p style="font-size: 1.5em; text-align:right; text-justify:inter-word" class="basket-products"><button style="color: black; display: inline-block; background-color: Transparent; background-repeat:no-repeat; border: none;outline:none; margin-right: 20px; margin-left:0px;" form="rem-{{index.b}}" type="submit" name="remove" id="remove">X</button><b>{{i['Prod_QTY']}}</b> x <b>{{i['Prod_Name']}}</b> | (<b>&pound;{{"%.2f"|format(i['Total'])}}</b>)</p>
+                                </form>  
+                                {% set index.b = index.b + 1 %}
+                            {% endfor %}
+                            <hr>
+                            <p style="font-size: 2em; text-align:right;" class="total">Grand Total (minus) VAT: (<b>&pound;{{"%.2f"|format(grand_total.a / 1.2)}}</b>)</p>
+                            <p style="font-size: 2em; text-align:right;" class="total-VAT">Grand Total (plus) VAT: (<b>&pound;{{"%.2f"|format(grand_total.a)}}</b>)</p>
+                            {% if 'Ordered' not in session: %}
+                                <button id="basket-confim" form="basket-tbl" class="btn btn-lg btn-primary btn-block" value="Submit" type="submit">Confirm Order</button>
+                            {% elif session['Ordered'] == True: %}
+                                <input type="hidden" name="Order_ID" ID="Order_ID" value='{{session['order_id']}}'>
+                                <button class="btn btn-lg btn-primary btn-block" disabled>ORDER PLACED</button>
+                                <script> 
+                                    setInterval(()=> {
+                                        var order_id = $("#Order_ID").val()
+                                        check_Stat(order_id);
+                                    }, 30000);
+                                </script>
+                            {% endif %}
+                        </center>
+                    </div>
                 </div>
-            </div>
-        {% endif %}
-    </div>
-    {% include 'footer.html' %}
-</body>
-</html>
+            {% endif %}
+        </div>
+        {% include 'footer.html' %}
+    </body>
+    </html>
+{% else %}
+    {% include '400.html' %}

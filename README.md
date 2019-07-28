@@ -25,9 +25,11 @@ Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQu
 - cd Python-Flask-Web-App
 - pip install -r requirements.txt
   
- ## SQL dump from PHPMyAdmin can be found in SQL/
- - This gives youa an idea of how the database is laid out, and gives you a starting point.
+ ## Some comments
+ - SQL data used during development has been dumped to SQL/Python_Flask_Web_App.sql, this gives you an idea of how the database is laid out, and gives you a starting point.
    - Comments embedded within this SQL script tell you the default user/staff password.
+   - You will want to change the MySQL configuration inside of App.py to fit your needs.
+   
  
  # Please be aware this is still a work-in-progress. This is still being built and will get better with time.
  

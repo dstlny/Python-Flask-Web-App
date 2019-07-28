@@ -21,11 +21,14 @@ Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQu
     - Users can remove specific products.
 
 ## Installation
-
 - git clone https://github.com/dstlny/Python-Flask-Web-App.git
 - cd Python-Flask-Web-App
 - pip install -r requirements.txt
   
+ ## SQL dump from PHPMyAdmin can be found in SQL/
+ - This gives youa an idea of how the database is laid out, and gives you a starting point.
+   - Comments embedded within this SQL script tell you the default user/staff password.
+ 
  # Please be aware this is still a work-in-progress. This is still being built and will get better with time.
  
- Created: 21/07/19 | Updated: 23/07/19 by Luke Elam (dstlny)
+ Created: 21/07/19 | Updated: 28/07/19 by Luke Elam (dstlny)

@@ -2,13 +2,12 @@
 Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQuery and many other things. Is coming along nicely.
 
 ## Current Features:
-- Responsive login and registration page
 - User/Admin login/registration capability
   - Ability to change user password
-- Responsive home page. 
-  - Is simplified and easier to access on smaller devices, and uses JQuery accordions to do this.
-  - On desktops, products are displayed as 'Cards'
-- Fetches data from MySQL database using Flasks inbuilt MySQL extension, thus this site uses MySQL - i was using PHPMyAdmin during development.
+- Website is responsive in nature.
+  - Is simplified and easier to access on smaller devices, uses JQuery accordions to do this.
+  - On desktops, products are displayed as 'Cards'.
+- Fetches data from MySQL database using Flasks inbuilt MySQL extension, thus this site uses MySQL - i was/is using PHPMyAdmin during development.
   - All passwords are encrypted using Bcrypt, making use of bcrypt's native hashpw() and checkpw() methods.
 - JSON is mainy used to communicate between backend and front-end.
   - Making use of AJAX to POST/GET requests from the server.

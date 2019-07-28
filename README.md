@@ -3,12 +3,12 @@ Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQu
 
 ## Current Features:
 - Responsive login and registration page
-- Ability to change user password
 - User/Admin login/registration capability
+  - Ability to change user password
 - Responsive home page. 
   - Is simplified and easier to access on smaller devices, and uses JQuery accordions to do this.
   - On desktops, products are displayed as 'Cards'
-- Fetches data from MySQL database using Flasks inbuilt MySQL extension.
+- Fetches data from MySQL database using Flasks inbuilt MySQL extension, thus this site uses MySQL - i was using PHPMyAdmin during development.
   - All passwords are encrypted using Bcrypt, making use of bcrypt's native hashpw() and checkpw() methods.
 - JSON is mainy used to communicate between backend and front-end.
   - Making use of AJAX to POST/GET requests from the server.
@@ -19,7 +19,6 @@ Most current project. Experimenting with Flask, AJAX, Javascript, Bootstrap, JQu
   - Table selection, is also included.
   - Once the user has ordered, the confirmation button is disabled.
     - Users can remove specific products.
-- Menu and overall website aesthetic is responsive.
 
 ## Installation
 

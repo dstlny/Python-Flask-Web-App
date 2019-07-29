@@ -1,10 +1,10 @@
 function completeOrder(id){
     
-    var data = {
+    let data = {
        "ID" : parseInt(id)
     }
     
-    var ajaxReq = $.ajax({
+    let ajaxReq = $.ajax({
        url: "/compOrder",
        data: JSON.stringify(data),
        type: 'POST',

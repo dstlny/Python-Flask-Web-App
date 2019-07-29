@@ -1,5 +1,5 @@
 from bcrypt import hashpw, gensalt, checkpw
-from flask import Flask, render_template, request, json, session, redirect, url_for, escape, jsonify
+from flask import Flask, render_template, request, session, redirect, url_for, escape, jsonify, Response
 from flaskext.mysql import MySQL
 from datetime import datetime
 
@@ -36,11 +36,14 @@ def showSignUp():
 def logout():
     session.clear()
     print('Session cleaned up')
-    return json.dumps({'message':'Logged out successfully!','redirect':'/'})
+    return jsonify({'message':'Logged out successfully!','redirect':'/'})
 
 @app.route('/account')
 def account_page():
-    return render_template('account.html', _mailuid=session['user']['_mailuid'], logged_in=session['user']['_logged_in'], admin=session['user']['_admin'], url='/account', reset_pass_url='/resetPass')
+    if session['user']['_logged_in'] == True:
+        return render_template('account.html', _mailuid=session['user']['_mailuid'], logged_in=session['user']['_logged_in'], admin=session['user']['_admin'], url='/account', reset_pass_url='/resetPass')
+    else:
+        return render_template('404.html')
 
 @app.route('/resetPass', methods=['POST'])
 def reset_user_pass():
@@ -51,15 +54,14 @@ def reset_user_pass():
     _new = request.form['inputNewPass'].encode('utf-8')
     _newCon = request.form['inputNewPassConfirm'].encode('utf-8')
     _hashed_password = hashpw(_new, gensalt()).decode('utf-8')
+    email = session['user']['_mailuid']
 
     if session['user']['_admin'] == True:
-        email = session['user']['_mailuid']
-        query = f"SELECT Password FROM staff WHERE Email_Address = '{email}';"
-        query2 = f"UPDATE staff SET Password='{_hashed_password}' WHERE Email_Address='{email}'"
+        query = "SELECT Password FROM staff WHERE Email_Address=%s"
+        query2 = "UPDATE staff SET Password=%s WHERE Email_Address=%s"
     else:
-        email = session['user']['_mailuid']
-        query = f"SELECT Password FROM customer WHERE EmailAddress = '{email}';"
-        query2 = f"UPDATE customer SET Password = '{_hashed_password}' WHERE EmailAddress = '{email}'"
+        query = "SELECT Password FROM customer WHERE EmailAddress = %s"
+        query2 = "UPDATE customer SET Password = %s WHERE EmailAddress = %s"
     
     try:
         if _curr and _new and _newCon:
@@ -67,11 +69,10 @@ def reset_user_pass():
             if _curr != _new and _newCon != _curr:
 
                 if _new != _newCon:
-                    data = {'error': 'Confirmation password does not match!'}
-                    return json.dumps(data)
+                    return jsonify({'error': 'Confirmation password does not match!'})
                 elif _new == _newCon:
                     cursor = conn.cursor()
-                    cursor.execute(query)
+                    cursor.execute(query, (email))
                     records = cursor.fetchone()
                     
                     if records == None:
@@ -80,20 +81,17 @@ def reset_user_pass():
                         row = records
                         if not checkpw(_curr, row[0].encode('utf8')):
                             data = {'error': 'Current Password does not match!'}
-                            return json.dumps(data)
+                            return jsonify(data)
                         elif checkpw(_curr, row[0].encode('utf8')):
-                            cursor.execute(query2)
+                            cursor.execute(query2, (_hashed_password, email))
                             conn.commit()
                             conn.close()
                             cursor.close()
-                            data = {'message': 'Password succesfully changed!'}
-                            return json.dumps(data)
+                            return jsonify({'message': 'Password succesfully changed!'})
             else:
-                data = {'error': 'New Password cannot be the same as your current password!'}
-                return json.dumps(data)
+                return jsonify({'error': 'New Password cannot be the same as your current password!'})
         else:
-            data = {'error': 'You must enter data!!'}
-            return json.dumps(data)
+            return jsonify({'error': 'You must enter data!!'})
     except Exception as error:
         print(error)
 
@@ -110,7 +108,7 @@ def clearOrder():
     session.modified = True
     
     print('Session cleaned up')
-    return json.dumps({'redirect':'/'})
+    return jsonify({'redirect':'/'})
 
 @app.route('/checkStatus',methods=['POST'])
 def getStat():
@@ -121,17 +119,16 @@ def getStat():
     client_data = request.get_json()
     print(client_data)
     Order_ID = client_data['ID']
-    query = f"SELECT Order_Complete FROM ORDERS WHERE Order_ID={Order_ID}"
-    cursor.execute(query)
+    query = "SELECT Order_Complete FROM ORDERS WHERE Order_ID=%s"
+    cursor.execute(query, (Order_ID))
     session['OrderComplete'] = True
 
     result = cursor.fetchone()
 
-    if result[0] == 'N':
-        return
+    if result[0] != 'N':
+        return jsonify({'message':'Order completed! Collect from till!'})
     else:
-        data = {'message':'Order completed! Collect from till!'}
-        return json.dumps(data)
+        return Response(status=304) 
 
 @app.route('/signUp',methods=['POST'])
 def signUp():
@@ -153,17 +150,16 @@ def signUp():
         data = cursor.fetchall()
         if len(data) is 0:
             conn.commit()
-            data = {'message':'Signed up succesfully!','redirect':'/'}
-            return json.dumps(data)
+            return jsonify({'message':'Signed up succesfully!','redirect':'/'})
         else:
-            data = {'error': 'Email already exists!'}
-            return json.dumps(data)
+            return jsonify({'error': 'Email already exists!'})
     else:
-        return json.dumps({'error':'Required fields have not been populated!'})
+        return jsonify({'error':'Required fields have not been populated!'})
 
 @app.route('/login',methods=['POST'])
 def loginUser():
     import userUtils
+    import json
     mysql = MySQL()
     mysql.init_app(app)
     conn = mysql.connect()
@@ -178,12 +174,12 @@ def loginUser():
         if user.checkUser(_email, _password) == True or user.checkAdmin(_email, _password) == True:
             session['user'] = json.loads(user.getUserObject())
             print(session['user'])
-            return json.dumps({'message':'Successfully logged you in!', 'redirect':'/menu'}) 
+            return jsonify({'message':'Successfully logged you in!', 'redirect':'/menu'}) 
         else:
-            return json.dumps({'error':'User not recognised or password incorrect!'}) 
+            return jsonify({'error':'User not recognised or password incorrect!'}) 
         
     else:
-        return json.dumps({'error':'Required fields have not been populated!'})
+        return jsonify({'error':'Required fields have not been populated!'})
 
 @app.route('/basket',methods=['POST'])
 def basket():
@@ -211,7 +207,7 @@ def basket():
             session['Order'] = main_order_list
             return redirect(url_for('menu'))
         else:
-            return json.dumps({'error':'You cannot have more than 4 items in your basket at a given time!'})
+            return jsonify({'error':'You cannot have more than 4 items in your basket at a given time!'})
 
 @app.route('/orders')
 def cus_orders():
@@ -240,15 +236,13 @@ def cus_orders():
     
         return render_template('orders.html', content=style_string)
 
-def get_items_from_id(id):
+def get_items_from_id(identifier):
     mysql = MySQL()
     mysql.init_app(app)
     conn = mysql.connect()
     cursor = conn.cursor()
     style_string = ""
-    sql = f"SELECT fk1_Product_ID, Quantity FROM ORDER_ITEMS WHERE fk2_Order_ID = {id}"
-    print(sql)
-    cursor.execute(f"SELECT fk1_Product_ID, Quantity FROM ORDER_ITEMS WHERE fk2_Order_ID = {id}")
+    cursor.execute("SELECT fk1_Product_ID, Quantity FROM ORDER_ITEMS WHERE fk2_Order_ID=%s", (identifier))
     
     for row in cursor.fetchall():
         style_string += f"<p style='line-height: 0.5;'>{row[1]} x {get_product_name(row[0])}</p>"
@@ -256,14 +250,12 @@ def get_items_from_id(id):
     cursor.close()
     conn.close()
 
-def get_product_name(id):
+def get_product_name(identifier):
     mysql = MySQL()
     mysql.init_app(app)
     conn = mysql.connect()
     cursor = conn.cursor()
-    style_string = ""
-    sql = f"SELECT Product_Name FROM PRODUCT WHERE Product_ID = {id}"
-    cursor.execute(f"SELECT Product_Name FROM PRODUCT WHERE Product_ID = {id}")
+    cursor.execute("SELECT Product_Name FROM PRODUCT WHERE Product_ID=%s", (identifier))
     row = cursor.fetchone()
     return row[0]
     cursor.close()
@@ -277,8 +269,8 @@ def complete_order_for_id():
     mysql.init_app(app)
     conn = mysql.connect()
     cursor = conn.cursor()
-    sql = f"UPDATE ORDERS SET Order_Complete = 'Y' WHERE Order_ID = {order_id}"
-    cursor.execute(sql)
+    sql = "UPDATE ORDERS SET Order_Complete='Y' WHERE Order_ID=%s"
+    cursor.execute(sql,(order_id))
     conn.commit()
     cursor.close()
     conn.close()
@@ -302,16 +294,19 @@ def final_Order():
     from webAppFunctions import webAppFunctions
     session['order_id'] = webAppFunctions().returnNextID()
 
-    sql = f"INSERT INTO ORDERS (Order_ID, Order_Total, Table_No, Order_Timestamp, Order_Complete, fk1_User_ID, fk2_Staff_ID) VALUES (NULL,{round(ORDER_TOTAL,2)},{Table},'{time_stamp}', 'N', {session['user']['_userID']}, NULL)"
-    cursor.execute(sql)
+    ORDER_TOTAL = round(ORDER_TOTAL,2)
+    USER_ID = session['user']['_userID']
+
+    sql = "INSERT INTO ORDERS (Order_ID, Order_Total, Table_No, Order_Timestamp, Order_Complete, fk1_User_ID, fk2_Staff_ID) VALUES (NULL, %s, %s, %s, 'N', %s, NULL)"
+    cursor.execute(sql, (ORDER_TOTAL, Table, time_stamp, USER_ID))
     conn.commit()
 
     for i in session['Order']:
-        sql = f"INSERT INTO ORDER_ITEMS (Order_Items_ID, Quantity, fk1_Product_ID, fk2_Order_ID) VALUES (NULL,{i['Prod_QTY']},{i['Prod_ID']},{session['order_id']})"
-        cursor.execute(sql)
+        sql = "INSERT INTO ORDER_ITEMS (Order_Items_ID, Quantity, fk1_Product_ID, fk2_Order_ID) VALUES (NULL, %s, %s, %s)"
+        cursor.execute(sql, (i['Prod_QTY'], i['Prod_ID'], session['order_id']))
         conn.commit()
     session['Ordered'] = True
-    return json.dumps({'message':'Successfully ordered!', 'ID':session['order_id']})
+    return jsonify({'message':'Successfully ordered!', 'ID':session['order_id']})
 
 @app.route('/remove_item',methods=['POST'])
 def remove_item():

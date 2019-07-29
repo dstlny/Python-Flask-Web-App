@@ -1,5 +1,5 @@
-{% if logged_in == True: %}
-    {% include 'header.html' %}
+{%- if session['user']['_logged_in'] == True: -%}
+    {%- include 'header.html' -%}
     <body>
         <div class="container" style="margin-top:60px; padding-bottom:60px; max-wdith:1300px; margin-bottom: 60px;">
             <!--JQuery accordion-->
@@ -45,14 +45,14 @@
                     </div>
                 </div>
             </div>
-            {% if 'Order' in session and session['Order']|length > 0: %}
+            {%- if 'Order' in session and session['Order']|length > 0: -%}
                 <div id="basket-accordion" style="float:right;margin-left:0px">
                     <h3>Current Basket</h3>
                     <div class="basket">
                         <center>
-                            {% if session['Ordered'] == True: %}
+                            {%- if session['Ordered'] == True: -%}
                                 <h3>Order ID: {{session['order_id']}}</h3><br>
-                            {% endif %}
+                            {%- endif -%}
                             <form name="basket-tbl" id="basket-tbl" action="/finalizeOrder" onsubmit="event.preventDefault(); return finaliseOrder();">
                                 <label for="tblNo">Table Number:</label>
                                 <select name="tblNo" id="tblNo">
@@ -66,38 +66,40 @@
                                     <option value="8">8</option>
                                 </select>
                             </form>
-                            {% set grand_total = namespace(a=0.00) %}
-                            {% set index = namespace(b=0) %}
-                            {% for i in session['Order']: %}
+                            {%- set grand_total = namespace(a=0.00) -%}
+                            {%- set index = namespace(b=0) -%}
+                            {%- for i in session['Order']: -%}
                                 <p style="display:none">{{grand_total.a}}</p>
-                                {% set grand_total.a = grand_total.a + i['Total'] %}
-                                <form  action="/remove_item" id="rem-{{index.b}}" onsubmit="event.preventDefault(); remove_from_basket({{index.b}});">
+                                {%- set grand_total.a = grand_total.a + i['Total'] -%}
+                                <form action="/remove_item" id="rem-{{index.b}}" onsubmit="event.preventDefault(); remove_from_basket({{index.b}});">
                                 <p style="font-size: 1.5em; text-align:right; text-justify:inter-word" class="basket-products"><button style="color: black; display: inline-block; background-color: Transparent; background-repeat:no-repeat; border: none;outline:none; margin-right: 20px; margin-left:0px;" form="rem-{{index.b}}" type="submit" name="remove" id="remove">X</button><b>{{i['Prod_QTY']}}</b> x <b>{{i['Prod_Name']}}</b> | (<b>&pound;{{"%.2f"|format(i['Total'])}}</b>)</p>
                                 </form>  
-                                {% set index.b = index.b + 1 %}
-                            {% endfor %}
+                                {%- set index.b = index.b + 1 -%}
+                            {%- endfor -%}
                             <hr>
                             <p style="font-size: 2em; text-align:right;" class="total">Grand Total (minus) VAT: (<b>&pound;{{"%.2f"|format(grand_total.a / 1.2)}}</b>)</p>
                             <p style="font-size: 2em; text-align:right;" class="total-VAT">Grand Total (plus) VAT: (<b>&pound;{{"%.2f"|format(grand_total.a)}}</b>)</p>
-                            {% if 'Ordered' not in session: %}
+                            {%- if 'Ordered' not in session: -%}
                                 <button id="basket-confim" form="basket-tbl" class="btn btn-lg btn-primary btn-block" value="Submit" type="submit">Confirm Order</button>
-                            {% elif session['Ordered'] == True: %}
-                                <input type="hidden" name="Order_ID" ID="Order_ID" value='{{session['order_id']}}'>
+                            {%- elif session['Ordered'] == True: -%}
+                                <input type="hidden" name="Order_ID" ID="Order_ID" value="{{session['order_id']}}">
                                 <button class="btn btn-lg btn-primary btn-block" disabled>ORDER PLACED</button>
-                                <script> 
+                                <script>
+                                    $("#tblNo").prop('disabled', true);
                                     setInterval(()=> {
                                         var order_id = $("#Order_ID").val()
                                         check_Stat(order_id);
                                     }, 30000);
                                 </script>
-                            {% endif %}
+                            {%- endif -%}
                         </center>
                     </div>
                 </div>
-            {% endif %}
+            {%- endif -%}
         </div>
-        {% include 'footer.html' %}
+        {%- include 'footer.html' -%}
     </body>
     </html>
-{% else %}
-    {% include '400.html' %}
+{%- else -%}
+    {%- include '400.html' -%}
+{%- endif -%}

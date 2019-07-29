@@ -1,6 +1,6 @@
 from bcrypt import hashpw, gensalt, checkpw
 from app import app
-from flask import Flask, render_template, request, json, session, redirect, url_for, escape
+from flask import Flask, session, url_for, jsonify
 from flaskext.mysql import MySQL
 
 class user():
@@ -73,16 +73,15 @@ class user():
         self.this_dict['_logged_in'] = self._logged_in
         self.this_dict['_userID'] = self._userID
         self.this_dict['_admin'] = self._admin
-        app_json = json.dumps(self.this_dict)
-        return app_json
+        return jsonify(self.this_dict)
     
     def checkIfDataNotEmpty(self, email, password):
         if not email and not password:
-            return json.dumps({'error':'Login fields cannot be empty!'})
+            return jsonify({'error':'Login fields cannot be empty!'})
         elif not email:
-            return json.dumps({'error':'Please enter an email!'})
+            return jsonify({'error':'Please enter an email!'})
         elif not password:
-            return json.dumps({'error':'Please enter a password!'})
+            return jsonify({'error':'Please enter a password!'})
         else:
             return True
 
@@ -90,7 +89,7 @@ class user():
         self.conn = self.mysql.connect()
         self.cursor = self.conn.cursor()
 
-        if self.cursor.execute(f"SELECT EmailAddress, User_ID, Password FROM CUSTOMER WHERE EmailAddress='{user}'"):
+        if self.cursor.execute("SELECT EmailAddress, User_ID, Password FROM CUSTOMER WHERE EmailAddress=%s", (user)):
 
             records = self.cursor.fetchone()
 
@@ -109,13 +108,13 @@ class user():
                     self.setAdmin(False)
                     return True       
         else:
-            return json.dumps({'error':'SQL Error occured!'})  
+            return jsonify({'error':'SQL Error occured!'})  
     
     def checkAdmin(self, user, password):
         self.conn = self.mysql.connect()
         self.cursor = self.conn.cursor()
 
-        if self.cursor.execute(f"SELECT Email_Address, Staff_ID, Password FROM STAFF WHERE Email_Address='{user}'"):
+        if self.cursor.execute("SELECT Email_Address, Staff_ID, Password FROM STAFF WHERE Email_Address=%s", (user)):
 
             records = self.cursor.fetchone()
 
@@ -135,4 +134,4 @@ class user():
                     self.setAdmin(True)
                     return True      
         else:
-            return json.dumps({'error':'SQL Error occured!'})  
+            return jsonify({'error':'SQL Error occured!'})  

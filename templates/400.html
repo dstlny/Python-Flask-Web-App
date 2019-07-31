@@ -1,2 +1,9 @@
-<title style="font-size:30px;">Error.</title>
-<h2 style="font-size:25px;">Invalid Request</h2>
+{% extends "base.html" %}
+
+{%- block nav -%}
+  <a class="nav-link" style="text-align: center; color:#fff;">INVALID REQUEST</a>
+{%- endblock -%}
+
+{%- block body -%}
+    <center><h1 style="font-size:45px;">{{message|safe}}</h2></center>
+{%- endblock -%}

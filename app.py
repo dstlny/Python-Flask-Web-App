@@ -3,16 +3,14 @@ from flask import Flask, render_template, request, session, redirect, url_for, e
 from flaskext.mysql import MySQL
 from datetime import datetime
 
-app = Flask(__name__)
+app = Flask(__name__,static_url_path='/static')
 # MySQL configurations
 app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'c3518706'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
+static_url_path='/static'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-mysql = MySQL()
-mysql.init_app(app)
-conn = mysql.connect()
 
 @app.route("/product_cat", methods=['POST'])
 def getProducts():
@@ -40,10 +38,10 @@ def logout():
 
 @app.route('/account')
 def account_page():
-    if session['user']['_logged_in'] == True:
-        return render_template('account.html', _mailuid=session['user']['_mailuid'], logged_in=session['user']['_logged_in'], admin=session['user']['_admin'], url='/account', reset_pass_url='/resetPass')
+    if not session or not session['user']:
+        return render_template('400.html', message="Woops. Looks like you aren't logged into the site. You must log-in to proceed.<br><a href='/'>Login here</a>")
     else:
-        return render_template('404.html')
+        return render_template('account.html', _mailuid=session['user']['_mailuid'], logged_in=session['user']['_logged_in'], admin=session['user']['_admin'], url='/account', reset_pass_url='/resetPass')
 
 @app.route('/resetPass', methods=['POST'])
 def reset_user_pass():
@@ -69,6 +67,7 @@ def reset_user_pass():
             if _curr != _new and _newCon != _curr:
 
                 if _new != _newCon:
+                    conn.close()
                     return jsonify({'error': 'Confirmation password does not match!'})
                 elif _new == _newCon:
                     cursor = conn.cursor()
@@ -81,6 +80,8 @@ def reset_user_pass():
                         row = records
                         if not checkpw(_curr, row[0].encode('utf8')):
                             data = {'error': 'Current Password does not match!'}
+                            conn.close()
+                            cursor.close()
                             return jsonify(data)
                         elif checkpw(_curr, row[0].encode('utf8')):
                             cursor.execute(query2, (_hashed_password, email))
@@ -89,8 +90,12 @@ def reset_user_pass():
                             cursor.close()
                             return jsonify({'message': 'Password succesfully changed!'})
             else:
+                conn.close()
+                cursor.close()
                 return jsonify({'error': 'New Password cannot be the same as your current password!'})
         else:
+            conn.close()
+            cursor.close()
             return jsonify({'error': 'You must enter data!!'})
     except Exception as error:
         print(error)
@@ -109,26 +114,6 @@ def clearOrder():
     
     print('Session cleaned up')
     return jsonify({'redirect':'/'})
-
-@app.route('/checkStatus',methods=['POST'])
-def getStat():
-    mysql = MySQL()
-    mysql.init_app(app)
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    client_data = request.get_json()
-    print(client_data)
-    Order_ID = client_data['ID']
-    query = "SELECT Order_Complete FROM ORDERS WHERE Order_ID=%s"
-    cursor.execute(query, (Order_ID))
-    session['OrderComplete'] = True
-
-    result = cursor.fetchone()
-
-    if result[0] != 'N':
-        return jsonify({'message':'Order completed! Collect from till!'})
-    else:
-        return Response(status=304) 
 
 @app.route('/signUp',methods=['POST'])
 def signUp():
@@ -150,10 +135,16 @@ def signUp():
         data = cursor.fetchall()
         if len(data) is 0:
             conn.commit()
+            conn.close()
+            cursor.close()
             return jsonify({'message':'Signed up succesfully!','redirect':'/'})
         else:
+            conn.close()
+            cursor.close()
             return jsonify({'error': 'Email already exists!'})
     else:
+        conn.close()
+        cursor.close()
         return jsonify({'error':'Required fields have not been populated!'})
 
 @app.route('/login',methods=['POST'])
@@ -174,12 +165,99 @@ def loginUser():
         if user.checkUser(_email, _password) == True or user.checkAdmin(_email, _password) == True:
             session['user'] = json.loads(user.getUserObject())
             print(session['user'])
+            conn.close()
+            cursor.close()
             return jsonify({'message':'Successfully logged you in!', 'redirect':'/menu'}) 
         else:
+            conn.close()
+            cursor.close()
             return jsonify({'error':'User not recognised or password incorrect!'}) 
-        
     else:
+        conn.close()
+        cursor.close()
         return jsonify({'error':'Required fields have not been populated!'})
+
+@app.route('/orders')
+def cus_orders():
+    if not session or not session['user'] or not session['user']['_admin']:
+        return render_template('400.html', message="Woops. Looks like you aren't logged into the site. You must log-in to proceed.<br><a href='/'>Login here</a>")
+    elif session['user']['_admin'] == True:
+    
+        mysql = MySQL()
+        mysql.init_app(app)
+        conn = mysql.connect()
+        cursor = conn.cursor()
+        cursor.execute("SELECT Order_ID, Order_Total, Table_No FROM ORDERS WHERE Order_Complete='N'")
+        style_string = ""
+
+        records = cursor.fetchall()
+
+        if records:
+        
+            for row in records:
+                style_string += f"<div class='card' style='border-radius: 15px;'><form  action='/compOrder' id='rem-{row[0]}' onsubmit='event.preventDefault(); completeOrder({row[0]});'><center><div class='card-body'><h5 class='card-title'>ORDER {row[0]}<br><hr>Table {row[2]}<br><hr>Total (<b>&pound;{round(row[1],2)}</b>)<hr></h5>"
+                style_string += f"<span class='price-new'>{get_items_from_id(row[0])}<br><button id='comp_order' form='rem-{row[0]}' class='btn btn-lg btn-primary btn-block' value='Submit' type='submit'>Complete Order</button></span></div></center></div>"
+
+            cursor.close()
+            conn.close()
+
+            return render_template('orders.html', content=style_string, url='/orders')
+
+        else:
+            style_string = '<center><p style="font-size:20px;">Currently no orders to process...<p></center><meta http-equiv="refresh" content="30">'
+            cursor.close()
+            conn.close()
+            return render_template('orders.html', content=style_string, url='/orders')
+
+
+def get_items_from_id(identifier):
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    style_string = ""
+    cursor.execute("SELECT fk1_Product_ID, Quantity FROM ORDER_ITEMS WHERE fk2_Order_ID=%s", (identifier))
+    
+    for row in cursor.fetchall():
+        style_string += f"<p style='line-height: 0.5;'>{row[1]} x {get_product_name(row[0])}</p>"
+        return style_string
+    else:
+        cursor.close()
+        conn.close()
+
+def get_product_name(identifier):
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    cursor.execute("SELECT Product_Name FROM PRODUCT WHERE Product_ID=%s", (identifier))
+    row = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return row[0]
+
+@app.route('/compOrder',methods=['POST'])
+def complete_order_for_id():
+    client_data = request.get_json()
+    order_id = client_data['ID']
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
+    sql = "UPDATE ORDERS SET Order_Complete='Y' WHERE Order_ID=%s"
+    cursor.execute(sql,(order_id))
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect(url_for('cus_orders'))
+
+@app.route('/menu')
+def menu():
+    if not session or not session['user']:
+        return render_template('400.html', message="Woops. Looks like you aren't logged into the site. You must log-in to proceed.<br><a href='/'>Login here</a>")
+    elif session['user']['_logged_in'] == True:
+        url = '/menu'
+        return render_template('menu.html', url=url)
 
 @app.route('/basket',methods=['POST'])
 def basket():
@@ -209,72 +287,20 @@ def basket():
         else:
             return jsonify({'error':'You cannot have more than 4 items in your basket at a given time!'})
 
-@app.route('/orders')
-def cus_orders():
-    mysql = MySQL()
-    mysql.init_app(app)
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute("SELECT Order_ID, Order_Total, Table_No FROM ORDERS WHERE Order_Complete='N'")
-    style_string = ""
-
-    records = cursor.fetchall()
-
-    if records:
-    
-        for row in records:
-            style_string += f"<div class='card' style='border-radius: 15px;'><form  action='/compOrder' id='rem-{row[0]}' onsubmit='event.preventDefault(); completeOrder({row[0]});'><center><div class='card-body'><h5 class='card-title'>ORDER {row[0]}<br><hr>Table {row[2]}<br><hr>Total (<b>&pound;{round(row[1],2)}</b>)<hr></h5>"
-            style_string += f"<span class='price-new'>{get_items_from_id(row[0])}<br><button id='comp_order' form='rem-{row[0]}' class='btn btn-lg btn-primary btn-block' value='Submit' type='submit'>Complete Order</button></span></div></center></div>"
-
-        cursor.close()
-        conn.close()
-
-        return render_template('orders.html', content=style_string)
-
-    else:
-        style_string = '<center><p style="font-size:20px;">Currently no orders to process...<p></center><meta http-equiv="refresh" content="30">'
-    
-        return render_template('orders.html', content=style_string)
-
-def get_items_from_id(identifier):
-    mysql = MySQL()
-    mysql.init_app(app)
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    style_string = ""
-    cursor.execute("SELECT fk1_Product_ID, Quantity FROM ORDER_ITEMS WHERE fk2_Order_ID=%s", (identifier))
-    
-    for row in cursor.fetchall():
-        style_string += f"<p style='line-height: 0.5;'>{row[1]} x {get_product_name(row[0])}</p>"
-        return style_string
-    cursor.close()
-    conn.close()
-
-def get_product_name(identifier):
-    mysql = MySQL()
-    mysql.init_app(app)
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    cursor.execute("SELECT Product_Name FROM PRODUCT WHERE Product_ID=%s", (identifier))
-    row = cursor.fetchone()
-    return row[0]
-    cursor.close()
-    conn.close()
-
-@app.route('/compOrder',methods=['POST'])
-def complete_order_for_id():
+@app.route('/remove_item',methods=['POST'])
+def remove_item():
+    Index_To_remove = None
     client_data = request.get_json()
-    order_id = client_data['ID']
-    mysql = MySQL()
-    mysql.init_app(app)
-    conn = mysql.connect()
-    cursor = conn.cursor()
-    sql = "UPDATE ORDERS SET Order_Complete='Y' WHERE Order_ID=%s"
-    cursor.execute(sql,(order_id))
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return redirect(url_for('cus_orders'))
+    Index_To_remove = client_data.get('Index', None)
+    
+    if Index_To_remove is not None:
+        if not 'Order' in session:
+            session['Order'] = []
+
+        del session['Order'][int(Index_To_remove)]
+        session.modified = True
+        print(f'removed index {Index_To_remove}')
+        return redirect(url_for('menu'))
 
 @app.route('/finalizeOrder',methods=['POST'])
 def final_Order():
@@ -306,27 +332,33 @@ def final_Order():
         cursor.execute(sql, (i['Prod_QTY'], i['Prod_ID'], session['order_id']))
         conn.commit()
     session['Ordered'] = True
+    cursor.close()
+    conn.close()
     return jsonify({'message':'Successfully ordered!', 'ID':session['order_id']})
 
-@app.route('/remove_item',methods=['POST'])
-def remove_item():
-    Index_To_remove = None
+@app.route('/checkStatus',methods=['POST'])
+def getStat():
+    mysql = MySQL()
+    mysql.init_app(app)
+    conn = mysql.connect()
+    cursor = conn.cursor()
     client_data = request.get_json()
-    Index_To_remove = client_data.get('Index', None)
-    
-    if Index_To_remove is not None:
-        if not 'Order' in session:
-            session['Order'] = []
+    print(client_data)
+    Order_ID = client_data['ID']
+    query = "SELECT Order_Complete FROM ORDERS WHERE Order_ID=%s"
+    cursor.execute(query, (Order_ID))
+    session['OrderComplete'] = True
 
-        del session['Order'][int(Index_To_remove)]
-        session.modified = True
-        print(f'removed index {Index_To_remove}')
-        return redirect(url_for('menu'))
+    result = cursor.fetchone()
 
-@app.route('/menu')
-def menu():
-    url = '/menu'
-    return render_template('menu.html', url=url)
+    if result[0] != 'N':
+        conn.close()
+        cursor.close()
+        return jsonify({'message':'Order completed! Collect from till!'})
+    else:
+        conn.close()
+        cursor.close()
+        return Response(status=304) 
 
 if __name__ == "__main__":
     app.run(debug=False)

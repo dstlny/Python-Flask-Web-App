@@ -1,6 +1,6 @@
 from bcrypt import hashpw, gensalt, checkpw
 from app import app
-from flask import Flask, session, url_for, jsonify
+from flask import Flask, session, url_for, jsonify, json
 from flaskext.mysql import MySQL
 
 class user():
@@ -73,7 +73,7 @@ class user():
         self.this_dict['_logged_in'] = self._logged_in
         self.this_dict['_userID'] = self._userID
         self.this_dict['_admin'] = self._admin
-        return jsonify(self.this_dict)
+        return json.dumps(self.this_dict)
     
     def checkIfDataNotEmpty(self, email, password):
         if not email and not password:
@@ -94,20 +94,27 @@ class user():
             records = self.cursor.fetchone()
 
             if records == None:
+                self.conn.close()
+                self.cursor.close()
                 return False
             else:
-                row = records
 
-                if not checkpw(password, row[2].encode('utf8')):
+                if not checkpw(password, records[2].encode('utf8')):
+                    self.conn.close()
+                    self.cursor.close()
                     return False
-                elif checkpw(password, row[2].encode('utf8')):
+                elif checkpw(password, records[2].encode('utf8')):
                     self.setLoggedIn(True)
-                    self.setUser(row[0])
-                    self.setEmail(row[0])
-                    self.setID(row[1])
+                    self.setUser(records[0])
+                    self.setEmail(records[0])
+                    self.setID(records[1])
                     self.setAdmin(False)
+                    self.conn.close()
+                    self.cursor.close()
                     return True       
         else:
+            self.conn.close()
+            self.cursor.close()
             return jsonify({'error':'SQL Error occured!'})  
     
     def checkAdmin(self, user, password):
@@ -119,19 +126,23 @@ class user():
             records = self.cursor.fetchone()
 
             if records == None:
+                self.conn.close()
+                self.cursor.close()
                 return False
             else:
 
-                row = records
-
-                if not checkpw(password, row[2].encode('utf8')):
+                if not checkpw(password, records[2].encode('utf8')):
                     return False
-                elif checkpw(password, row[2].encode('utf8')):
+                elif checkpw(password, records[2].encode('utf8')):
                     self.setLoggedIn(True)
-                    self.setUser(row[0])
-                    self.setEmail(row[0])
-                    self.setID(row[1])
+                    self.setUser(records[0])
+                    self.setEmail(records[0])
+                    self.setID(records[1])
                     self.setAdmin(True)
+                    self.conn.close()
+                    self.cursor.close()
                     return True      
         else:
+            self.conn.close()
+            self.cursor.close()
             return jsonify({'error':'SQL Error occured!'})  

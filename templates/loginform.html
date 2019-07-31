@@ -8,10 +8,10 @@
         <input style="margin-bottom:10px;" type="email" name="inputEmail" id="inputEmail" class="form-control" placeholder="Email address" required autofocus autocomplete="off">
         <label for="inputPassword" class="sr-only">Password</label>
         <input style="margin-bottom:10px;" type="password" name="inputPassword" id="inputPassword" class="form-control" placeholder="Password" required autocomplete="off">
-        {% if not session or session['user']['_logged_in'] != True: %} 
-            <button id="btnSignUp" class="btn btn-lg btn-primary btn-block" type="button">Login</button>
-        {% elif session and session['user']['_logged_in'] == True: %}
+        {%- if not session or session['user']['_logged_in'] != True: -%} 
+            <button id="login" class="btn btn-lg btn-primary btn-block" type="button">Login</button>
+        {%- elif session and session['user']['_logged_in'] == True: -%}
             <button id="logout" class="btn btn-lg btn-block" type="button">Logout</button>
-        {% endif %}
+        {%- endif -%}
     </form>
 </div>

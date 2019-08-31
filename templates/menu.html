@@ -13,29 +13,18 @@
                     <!--JQuery accordion-->
                     <div id="inner-accordion">
                         <h3>Latte</h3>
-                            <div class='Coffee_Latte'>
-                                <script type="text/javascript">getProduct('Coffee_Latte');</script>
-                            </div>
+                            <div class='Coffee_Latte'></div>
                         <h3>Americano</h3>
-                            <div class='Coffee_Americano'>
-                                <script type="text/javascript">getProduct('Coffee_Americano');</script>
-                            </div>
+                            <div class='Coffee_Americano'></div>
                         <h3>Espresso</h3>
-                            <div class='Coffee_Espresso'>
-                                <script type="text/javascript">getProduct('Coffee_Espresso');</script>
-                            </div>
+                            <div class='Coffee_Espresso'></div>
                         <h3>Macchiato</h3>
-                            <div class='Coffee_Macchiato'>
-                                <script type="text/javascript">getProduct('Coffee_Macchiato');</script>
-                            </div>
+                            <div class='Coffee_Macchiato'></div>
                         <h3>Cappuccino</h3>
                             <div class='Coffee_Cappuccino'>
-                                <script type="text/javascript">getProduct('Coffee_Cappuccino');</script>
                             </div>
                         <h3>Mocha</h3>
-                            <div class='Coffee_Mocha'>
-                                <script type="text/javascript">getProduct('Coffee_Mocha');</script>
-                            </div>
+                            <div class='Coffee_Mocha'></div>
                     </div>
                 </div>
                 <h3>Bakery items</h3>
@@ -43,12 +32,11 @@
                     <!--JQuery accordion-->
                     <div id="inner-accordion-bakery">
                         <h3>On the side..</h3>
-                        <div class='Bakery'>
-                            <script type="text/javascript">getProduct('Bakery');</script>
-                        </div>
+                            <div class='Bakery'></div>
                     </div>
                 </div>
             </div>
+            <script type="text/javascript">getProduct();</script>
             {%- if 'Order' in session and session['Order']|length > 0: -%}
                 <div id="basket-accordion" style="float:right;margin-left:0px">
                     <h3>Current Basket</h3>

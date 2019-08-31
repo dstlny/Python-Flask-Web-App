@@ -112,22 +112,37 @@
     });
  });
  
- function getProduct(product_cat) {
+ function getProduct() {
+
+   var class_arr = []
     
-    let data = {
-       'category': product_cat,
-    };
-    
-    let ajaxReq = $.ajax({
-        url: "/product_cat",
-        type: 'POST',
-        contentType: "application/json",
-        dataType: 'json',
-        async: false, 
-        data: JSON.stringify(data)
+    $('div div').each(function(){
+      let innerDivClass = $(this).attr('class');
+
+      if(innerDivClass != undefined){
+
+         if (innerDivClass.includes('Coffee') || innerDivClass.includes('Bakery')){
+            class_arr.push(innerDivClass)
+         } 
+      }
     });
 
-    ajaxReq.done(response => appendToMenu(product_cat,response));
+    class_arr.forEach(function (item, index) {
+      let data = {
+         'category': item
+       };
+   
+       let ajaxReq = $.ajax({
+         url: "/product_cat",
+         type: 'POST',
+         contentType: "application/json",
+         dataType: 'json',
+         async: false, 
+         data: JSON.stringify(data)
+       });
+   
+        ajaxReq.done(response => appendToMenu(item, response));
+    });
  }
  
  function appendToMenu(product_cat,product_cat_json){
